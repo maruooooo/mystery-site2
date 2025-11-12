@@ -13,16 +13,23 @@ body {
   padding: 20px;
 }
 h1 {
-  text-align: center;
   color: #b22222;
+  text-align: center;
 }
 .container {
-  max-width: 700px;
+  max-width: 750px;
   margin: 0 auto;
   background: #fff;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.question {
+  display: none;
+  padding: 10px 0;
+}
+.visible {
+  display: block;
 }
 input[type="text"] {
   width: 90%;
@@ -32,27 +39,39 @@ input[type="text"] {
 }
 button {
   margin-top: 10px;
-  padding: 8px 16px;
+  padding: 10px 18px;
   font-size: 1em;
   border: none;
   border-radius: 8px;
   background: #007bff;
-  color: #fff;
+  color: white;
   cursor: pointer;
 }
 button:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
-.hint, .next-action, .criminal {
-  background: #f1f1f1;
+.hint, .next-action, .info {
   padding: 10px;
-  border-left: 4px solid #007bff;
   margin-top: 10px;
 }
+.hint {
+  background: #f1f1f1;
+  border-left: 4px solid #999;
+}
+.next-action {
+  background: #e9f3ff;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+}
+.info {
+  background: #ffeaea;
+  border: 2px solid #ff0000;
+  border-radius: 6px;
+}
 .nav {
-  text-align: center;
   margin-bottom: 10px;
+  text-align: center;
 }
 .nav button {
   background: #6c757d;
@@ -62,16 +81,12 @@ button:disabled {
 .nav button.active {
   background: #007bff;
 }
-img.icon {
-  width: 60px;
-  margin-top: 10px;
-}
-#truth {
+.truth {
   background: #fff3cd;
-  border-left: 5px solid #ffc107;
-  padding: 15px;
+  border: 2px solid #ffcc00;
+  padding: 10px;
   margin-top: 15px;
-  display: none;
+  border-radius: 6px;
 }
 </style>
 </head>
@@ -81,146 +96,159 @@ img.icon {
   <h1>科学捜査官～火災報知器の解明～</h1>
   <p><strong>遊び方：</strong><br>
   各問題に答えを入力してください。<br>
-  正解なら「次にやること」と「犯人の情報」が表示されます。<br>
-  不正解ならヒントボタンを押してヒントを確認してください。<br>
-  正解していないと次の問題に進めません。<br>
-  前の問題に戻って確認も可能です。<br>
+  正解なら「次にやること」が表示されます。<br>
+  前の問題に戻って確認することもできます。<br>
   解答は「ひらがな」または「漢字」で入力してもOKです。</p>
 
   <div class="nav" id="nav"></div>
   <div id="questions"></div>
-  <div id="truth"></div>
 </div>
 
 <script>
-const data = [
-  { q: "問題1．答えは何か？（ひらがなで解答）", 
-    answer: ["めいせい","明聖"], 
-    hint: "問題通りに解いてみてください", 
-    next: "問題2に挑戦する", 
-    criminal: "明聖高校の教員みたいだ" },
-  { q: "問題2．回答は何か？", 
+const quizData = [
+  { 
+    q: "問題1．答えは何か？（ひらがなで解答）", 
+    answer: ["めいせい", "明聖"], 
+    hint: "容疑者の名前はなんだったかな",
+    next: "問題2に挑戦する",
+    info: "明聖高校の教員みたいだ"
+  },
+  { 
+    q: "問題2．回答は何か？", 
     answer: ["ちいかわ"], 
-    hint: "この動物には規則性が・・・？", 
-    next: "1階で少し早い気分のポスターを探そう", 
-    criminal: "犯人はちいかわが好きみたいだ" },
-  { q: "問題3．このポスターの指示にはどこに向かえと書いてある？", 
-    answer: ["花壇","かだん"], 
-    hint: "ポスターには不可解な文字列が・・・？", 
-    next: "花壇といえば、花が咲いている場所がこの学校にもある気がする・・・", 
-    criminal: "犯人は理科の先生ではないようだ" },
-  { q: "問題4．花壇で得た、あいことばはなにか？", 
-    answer: ["火災報知器","かさいほうちき"], 
-    hint: "この指令の文章には違和感があるな！", 
-    next: "容疑者の指紋を採取しよう！（職員室に行くときは先生に失礼のないようにしましょう）", 
-    criminal: "犯人は職員室にいるみたいだ" },
-  { q: "問題5．犯人はだれか（苗字のみ）", 
-    answer: ["鈴木","すずき"], 
-    hint: "犯人の指紋検出を行い、犯人を特定して下さい。", 
-    next: "", 
-    criminal: "" }
+    hint: "この動物には規則性が・・・？",
+    next: "1階で少し早い気分のポスターを探そう",
+    info: "理科の教員ではないみたいだ"
+  },
+  { 
+    q: "問題3．このポスターの指示にはどこに向かえと書いてある？", 
+    answer: ["花壇", "かだん"], 
+    hint: "ポスターには不可解な文字列が・・・？",
+    next: "花壇といえば、花が咲いている場所がこの学校にもある気がする・・・",
+    info: "犯人はちいかわが好きなようだ"
+  },
+  { 
+    q: "問題4．花壇で得た、あいことばはなにか？", 
+    answer: ["火災報知器", "かさいほうちき"], 
+    hint: "この指令には文字に違和感があるな",
+    next: "容疑者の指紋を採取しよう！（職員室に行くときは先生に失礼のないようにしましょう）",
+    info: "犯人は職員室にいるみたいだ"
+  },
+  { 
+    q: "問題5．犯人はだれか（苗字のみ）", 
+    answer: ["鈴木", "すずき"], 
+    hint: "犯人の右の人差し指の指紋検出を行い、犯人を特定して下さい。",
+    next: "",
+    info: ""
+  }
 ];
 
 const truthText = `
-<h2>🔍事件の真相</h2>
+<div class="truth">
+<h3>事件の真相</h3>
 <p>今回の事件の真相は犯人の趣味であった。<br>
 犯人は、火災報知機を押すスリルを味わいたく、誰もいない校舎に忍び込んだ。<br>
 ボタンを押すときに手袋をつけるのを忘れたことに気づき、その後は震えて授業を行っていたそう。<br>
 事件を調査していると、過去にも他の施設で火災報知機を押していた常習性が確認された。<br>
-犯人は、今後もボタンを連打していきたいと告げていた・・・・</p>
+今後もボタンを連打していきたいと告げていた・・・・</p>
 <p><strong>犯人にはちいかわグッズの没収と、毎月のお小遣い1万円の刑が実行された。</strong></p>
-`;
+</div>`;
 
 let current = 0;
-const progress = JSON.parse(localStorage.getItem("detectiveGame")) || {};
+const saved = JSON.parse(localStorage.getItem("investigationProgress")) || {};
+const questionsDiv = document.getElementById("questions");
+const navDiv = document.getElementById("nav");
 
-const nav = document.getElementById("nav");
-const container = document.getElementById("questions");
-const truthDiv = document.getElementById("truth");
-
-function save() {
-  localStorage.setItem("detectiveGame", JSON.stringify(progress));
+function saveProgress() {
+  localStorage.setItem("investigationProgress", JSON.stringify(saved));
 }
 
 function renderNav() {
-  nav.innerHTML = "";
-  data.forEach((_, i) => {
+  navDiv.innerHTML = "";
+  quizData.forEach((_, i) => {
     const btn = document.createElement("button");
     btn.textContent = `問題${i+1}`;
-    btn.className = (i===current) ? "active" : "";
-    btn.disabled = (i>0 && !progress[i-1]);
+    if (i === current) btn.classList.add("active");
+    btn.disabled = (i > 0 && !saved[i-1]);
     btn.onclick = () => showQuestion(i);
-    nav.appendChild(btn);
+    navDiv.appendChild(btn);
   });
 }
 
 function showQuestion(index) {
   current = index;
+  questionsDiv.innerHTML = "";
   renderNav();
-  const d = data[index];
-  container.innerHTML = `
-    <h2>${d.q}</h2>
-    <input type="text" id="ans" placeholder="ここに入力">
+
+  const q = quizData[index];
+  const div = document.createElement("div");
+  div.className = "question visible";
+
+  div.innerHTML = `
+    <h2>${q.q}</h2>
+    <input type="text" id="answerInput" placeholder="ここに入力">
     <button id="checkBtn">答える</button>
     <button id="hintBtn">ヒント</button>
-    <div id="result"></div>
-    <div id="next"></div>
+    <div id="message"></div>
+    <div id="nextBtnArea"></div>
   `;
-  const ansInput = document.getElementById("ans");
-  const resultDiv = document.getElementById("result");
-  const nextDiv = document.getElementById("next");
+  questionsDiv.appendChild(div);
 
-  if(progress[index]) {
-    ansInput.value = progress[index].input;
-    displayResult(true, d, resultDiv, nextDiv, index);
-  }
+  const answerInput = div.querySelector("#answerInput");
+  const message = div.querySelector("#message");
+  const nextArea = div.querySelector("#nextBtnArea");
+  const checkBtn = div.querySelector("#checkBtn");
+  const hintBtn = div.querySelector("#hintBtn");
 
-  document.getElementById("hintBtn").onclick = () => {
-    resultDiv.innerHTML = `<div class="hint">ヒント：${d.hint}</div>`;
-  };
-
-  document.getElementById("checkBtn").onclick = () => {
-    const ans = ansInput.value.trim();
-    const isCorrect = d.answer.includes(ans);
-    if(isCorrect){
-      progress[index] = {input: ans, correct: true};
-      save();
-      displayResult(true, d, resultDiv, nextDiv, index);
-      renderNav();
-    } else {
-      displayResult(false, d, resultDiv, nextDiv, index);
-    }
-  };
-}
-
-function displayResult(isCorrect, d, resultDiv, nextDiv, index){
-  if(isCorrect){
-    resultDiv.innerHTML = `
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Red_Circle.svg/1024px-Red_Circle.svg.png" class="icon">
-      <div class="next-action">次にやること：${d.next || "（これで全ての謎が解けた！）"}</div>
-      ${d.criminal ? `<div class="criminal">犯人の情報：${d.criminal}</div>` : ""}
+  // 保存された回答を復元
+  if (saved[index]) {
+    answerInput.value = saved[index].input;
+    message.innerHTML = `
+      ${q.info ? `<div class="info">犯人の情報：${q.info}</div>` : ""}
+      ${q.next && index < quizData.length-1 ? `<div class="next-action">次にやること：${q.next}</div>` : ""}
     `;
-    if(index < data.length-1){
-      nextDiv.innerHTML = `<button id="nextBtn">次の問題へ進む</button>`;
-      document.getElementById("nextBtn").onclick = () => showQuestion(index+1);
+    if (index < quizData.length-1) {
+      nextArea.innerHTML = `<button id="nextBtn">次の問題へ進む</button>`;
+      nextArea.querySelector("#nextBtn").onclick = () => showQuestion(index+1);
     } else {
-      nextDiv.innerHTML = `<button id="truthBtn">真相を暴く</button>`;
-      document.getElementById("truthBtn").onclick = () => {
-        truthDiv.innerHTML = truthText;
-        truthDiv.style.display = "block";
+      nextArea.innerHTML = `<button id="truthBtn">真相を暴く</button>`;
+      nextArea.querySelector("#truthBtn").onclick = () => {
+        nextArea.innerHTML = truthText;
       };
     }
-  } else {
-    resultDiv.innerHTML = `
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Blue_x.svg/1024px-Blue_x.svg.png" class="icon">
-      <div class="hint">ヒント：${d.hint}</div>
-    `;
   }
+
+  hintBtn.onclick = () => {
+    message.innerHTML = `<div class="hint">ヒント：${q.hint}</div>`;
+  };
+
+  checkBtn.onclick = () => {
+    const ans = answerInput.value.trim().replace(/\s+/g,"");
+    const isCorrect = q.answer.includes(ans);
+    if (isCorrect) {
+      saved[index] = { input: ans, correct: true };
+      saveProgress();
+      message.innerHTML = `
+        ${q.info ? `<div class="info">犯人の情報：${q.info}</div>` : ""}
+        ${q.next && index < quizData.length-1 ? `<div class="next-action">次にやること：${q.next}</div>` : ""}
+      `;
+      if (index < quizData.length-1) {
+        nextArea.innerHTML = `<button id="nextBtn">次の問題へ進む</button>`;
+        nextArea.querySelector("#nextBtn").onclick = () => showQuestion(index+1);
+      } else {
+        nextArea.innerHTML = `<button id="truthBtn">真相を暴く</button>`;
+        nextArea.querySelector("#truthBtn").onclick = () => {
+          nextArea.innerHTML = truthText;
+        };
+      }
+      renderNav();
+    } else {
+      message.innerHTML = `<div class="hint">ヒント：${q.hint}</div>`;
+    }
+  };
 }
 
 showQuestion(current);
 </script>
-
 </body>
 </html>
-
